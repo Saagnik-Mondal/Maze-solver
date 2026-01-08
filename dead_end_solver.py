@@ -309,7 +309,90 @@ def save_solution(filename, solution, stats, solve_time, directory="mazes"):
     print(f"\nSolution saved to: {filepath}")
 
 
-def solve_and_save(filename, visualize=True):
+def export_solution_image(maze, solution, start, end, filename):
+    height, width = maze.shape
+    total_cells = height * width
+    
+    if total_cells > 10000000:
+        cell_size = 5
+    elif total_cells > 4000000:
+        cell_size = 8
+    elif total_cells > 1000000:
+        cell_size = 12
+    elif total_cells > 100000:
+        cell_size = 15
+    else:
+        cell_size = 20
+    
+    img_width = width * cell_size
+    img_height = height * cell_size + 40
+    
+    max_dim = 32767
+    if img_width > max_dim or img_height > max_dim:
+        cell_size = max(1, min(max_dim // width, max_dim // height))
+        img_width = width * cell_size
+        img_height = height * cell_size + 40
+    
+    try:
+        pygame.init()
+        surface = pygame.Surface((img_width, img_height))
+        
+        BLACK = (0, 0, 0)
+        WHITE = (255, 255, 255)
+        GREEN = (0, 255, 0)
+        RED = (255, 0, 0)
+        BLUE = (100, 149, 237)
+        
+        surface.fill(WHITE)
+        
+        print(f"Rendering solution image ({width}x{height})...")
+        for y in range(height):
+            for x in range(width):
+                if maze[y, x] == 1:
+                    color = BLACK
+                elif solution[y, x] == 1:
+                    color = BLUE
+                else:
+                    color = WHITE
+                
+                rect = pygame.Rect(x * cell_size, y * cell_size, cell_size, cell_size)
+                pygame.draw.rect(surface, color, rect)
+        
+        start_y, start_x = start
+        start_rect = pygame.Rect(start_x * cell_size, start_y * cell_size, cell_size, cell_size)
+        pygame.draw.rect(surface, GREEN, start_rect)
+        
+        end_y, end_x = end
+        end_rect = pygame.Rect(end_x * cell_size, end_y * cell_size, cell_size, cell_size)
+        pygame.draw.rect(surface, RED, end_rect)
+        
+        if cell_size >= 8:
+            font = pygame.font.Font(None, min(24, cell_size * 2))
+            start_text = font.render('S', True, BLACK)
+            end_text = font.render('E', True, BLACK)
+            surface.blit(start_text, (start_x * cell_size + 2, start_y * cell_size + 2))
+            surface.blit(end_text, (end_x * cell_size + 2, end_y * cell_size + 2))
+        
+        font = pygame.font.Font(None, 24)
+        info_text = f"Solved: {width}x{height} | Solution Path (Blue) | Dead End Filling Algorithm"
+        text_surface = font.render(info_text, True, BLACK)
+        surface.blit(text_surface, (10, height * cell_size + 10))
+        
+        output_path = filename.replace('.json', '_solution.png')
+        pygame.image.save(surface, output_path)
+        pygame.quit()
+        
+        file_size = os.path.getsize(output_path) / (1024 * 1024)
+        print(f"Solution image saved: {output_path} ({file_size:.2f} MB)")
+        
+        return output_path
+        
+    except Exception as e:
+        print(f"Error exporting solution image: {e}")
+        return None
+
+
+def solve_and_save(filename, visualize=True, export_image=True):
     print(f"\n{'='*60}")
     print(f"Loading maze: {filename}")
     print(f"{'='*60}\n")
@@ -328,6 +411,10 @@ def solve_and_save(filename, visualize=True):
     )
     
     save_solution(filename, solution, stats, solve_time)
+    
+    if export_image:
+        filepath = os.path.join("mazes", filename)
+        export_solution_image(maze, solution, start, end, filepath)
     
     return solution, stats, solve_time
 
@@ -351,5 +438,6 @@ if __name__ == "__main__":
         print("the solution path remains.\n")
         
         visualize = input("Enable visualization? (y/n, default=y): ").strip().lower() != 'n'
+        export_image = input("Export solution as image? (y/n, default=y): ").strip().lower() != 'n'
         
-        solve_and_save(filename, visualize=visualize)
+        solve_and_save(filename, visualize=visualize, export_image=export_image)
