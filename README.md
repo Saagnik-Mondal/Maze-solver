@@ -4,22 +4,27 @@ A Python-based maze generation and solving system with real-time visualization u
 
 Overview
 
-This project implements recursive backtracking algorithms for both generating and solving mazes. It includes support for creating extremely large mazes with over 30 million cells and provides interactive visualization during generation and solving.
+This project implements multiple algorithms for both generating and solving mazes. It includes support for creating extremely large mazes with up to 50 million cells and provides interactive visualization during generation and solving.
 
 Features
 
 Maze Generation: Creates perfect mazes using recursive backtracking algorithm
-Large Maze Support: Can generate mazes with 30+ million cells (up to 100M cells)
+Large Maze Support: Can generate mazes with up to 50 million cells
 Real-time Visualization: Watch mazes being generated and solved in real-time
+Multiple Solving Algorithms: Recursive backtracking and dead end filling methods
 Multiple Size Presets: Choose from small, medium, large, or custom maze sizes
 Efficient Storage: Automatically saves mazes in JSON format with numpy array support for large mazes
 Interactive Solving: Visual maze solving with step counting and time tracking
+Image Export: Export mazes as PNG images for manual solving
+Optimized Performance: Designed for Mac M1 Air 8GB with lag prevention
 
 Files
 
 maze.py: Basic maze generator for small to medium sized mazes
-large_maze_generator.py: Advanced generator for creating massive mazes (30M+ cells)
-recursive_backtracking.py: Maze solver with Pygame visualization
+large_maze_generator.py: Advanced generator for creating massive mazes (up to 50M cells)
+recursive_backtracking.py: Maze solver using recursive backtracking with visualization
+dead_end_solver.py: Maze solver using dead end filling algorithm with visualization
+export_maze_image.py: Utility to export existing mazes as PNG images for manual solving
 
 Requirements
 
@@ -49,9 +54,23 @@ Follow the interactive prompts to select maze size and visualization options.
 
 Solving a Maze
 
+Option 1: Recursive Backtracking
+
 python recursive_backtracking.py
 
-This will automatically load and solve the most recently generated maze with visual feedback.
+This will automatically load and solve the most recently generated maze using recursive backtracking.
+
+Option 2: Dead End Filling
+
+python dead_end_solver.py
+
+This will solve the maze by iteratively filling in all dead ends until only the solution path remains.
+
+Exporting Maze as Image
+
+python export_maze_image.py
+
+This will convert any maze to a PNG image that you can print and solve by hand.
 
 How It Works
 
@@ -59,9 +78,15 @@ Maze Generation
 
 The generator uses recursive backtracking to carve passages through a grid of walls. Starting from a random cell, it randomly chooses unvisited neighboring cells and creates paths between them. When it reaches a dead end, it backtracks to find unexplored paths.
 
-Maze Solving
+Maze Solving Algorithms
 
-The solver uses a similar recursive backtracking approach to find a path from the start to the end position. It explores all possible paths until it finds the solution, marking the correct path as it goes.
+Recursive Backtracking
+
+The solver explores all possible paths from the start position. It marks cells as visited and backtracks when it hits a dead end. This continues until the end position is found. The algorithm guarantees finding a solution if one exists.
+
+Dead End Filling
+
+This algorithm identifies and fills in all dead ends (passages with only one open neighbor) iteratively. It continues filling dead ends until no more exist. What remains is the solution path from start to end. This method is often faster for complex mazes and provides a clear visualization of the solution process.
 
 Technical Details
 
@@ -73,8 +98,11 @@ Large mazes are saved as separate .npy files for efficient storage and loading
 
 Performance
 
-The iterative implementation can handle mazes with over 100 million cells
-Visualization can be toggled for faster generation of extremely large mazes
+Optimized for Mac M1 Air 8GB with lag prevention
+Can handle mazes up to 50 million cells
+Adaptive visualization updates based on maze size
+Automatic visualization disabling for very large mazes to prevent lag
+Cell sizes automatically adjusted for clear visibility without zooming
 Progress tracking provides feedback during long generation times
 
 Output
