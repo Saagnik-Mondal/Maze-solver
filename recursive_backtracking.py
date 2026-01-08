@@ -49,25 +49,44 @@ def solve_maze_with_pygame(maze, start, end, cell_size=None):
     pygame.init()
     
     height, width = maze.shape
+    total_cells = height * width
+    
+    if total_cells > 10000000:
+        print(f"\n⚠️  Warning: Very large maze ({total_cells:,} cells)")
+        print("Solving may take several minutes. Visualization updates reduced to prevent lag.\n")
     
     # Auto-calculate cell size to fit screen if not provided
     if cell_size is None:
         # Get display info for screen size
         display_info = pygame.display.Info()
-        max_width = display_info.current_w - 100  # Leave margin
-        max_height = display_info.current_h - 200  # Leave margin for info bar
+        max_width = display_info.current_w - 150  # Leave margin
+        max_height = display_info.current_h - 250  # Leave margin for info bar and title bar
         
-        # Calculate cell size to fit the screen
+        # Calculate cell size to fit the entire maze on screen
         cell_size_w = max_width // width
         cell_size_h = max_height // height
-        cell_size = min(cell_size_w, cell_size_h, 30)  # Max 30 pixels per cell
-        cell_size = max(cell_size, 3)  # Minimum 3 pixels per cell
+        cell_size = min(cell_size_w, cell_size_h)  # Fit entire maze
+        
+        # Ensure walls are clearly visible: minimum 4px, maximum 15px for balance
+        if cell_size < 4:
+            cell_size = 4
+            print(f"Note: Maze is large. Using 4px cells - you may need to scroll or zoom")
+        elif cell_size > 15:
+            cell_size = 15
+            print(f"Note: Using 15px cells for optimal visibility")
     
     screen_width = width * cell_size
     screen_height = height * cell_size + 60
     
+    # Ensure window fits on display
+    display_info = pygame.display.Info()
+    if screen_width > display_info.current_w - 100:
+        screen_width = display_info.current_w - 100
+    if screen_height > display_info.current_h - 150:
+        screen_height = display_info.current_h - 150
+    
     screen = pygame.display.set_mode((screen_width, screen_height))
-    pygame.display.set_caption("Maze Solver - Recursive Backtracking")
+    pygame.display.set_caption(f"Maze Solver - {height}x{width} | Cell size: {cell_size}px")
     
     # Colors
     WHITE = (255, 255, 255)
@@ -139,9 +158,18 @@ def solve_maze_with_pygame(maze, start, end, cell_size=None):
         solution[y, x] = 1
         steps += 1
         
-        if steps % 5 == 0:
+        # Adaptive update frequency based on maze size
+        total_cells = height * width
+        if total_cells > 10000000:
+            update_freq = 1000
+        elif total_cells > 1000000:
+            update_freq = 100
+        else:
+            update_freq = 10
+        
+        if steps % update_freq == 0:
             draw_maze()
-            clock.tick(60)
+            clock.tick(120)
         
         moves = [(0, 1), (1, 0), (0, -1), (-1, 0)]
         

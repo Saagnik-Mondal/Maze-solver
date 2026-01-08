@@ -24,7 +24,8 @@ class LargeMazeGenerator:
         self.EMPTY = 0
         self.NORTH, self.SOUTH, self.EAST, self.WEST = 0, 1, 2, 3
         
-        sys.setrecursionlimit(min(100000, max(1000, self.total_cells // 100)))
+        # Not using recursion for generation, but set reasonable limit for safety
+        sys.setrecursionlimit(10000)
         
     def generate_iterative(self, visualize=True, cell_size=1):
         print("Generating maze using iterative backtracking...")
@@ -37,18 +38,34 @@ class LargeMazeGenerator:
         maze[1, 1] = self.EMPTY
         
         total_passages = ((self.HEIGHT // 2) * (self.WIDTH // 2))
-        progress_interval = max(1, total_passages // 100)
+        
+        # Optimize progress updates based on maze size
+        if self.total_cells > 10000000:
+            progress_interval = max(10000, total_passages // 20)
+        elif self.total_cells > 1000000:
+            progress_interval = max(5000, total_passages // 50)
+        else:
+            progress_interval = max(100, total_passages // 100)
         
         screen = None
-        if visualize and self.total_cells <= 10000000:
+        if visualize and self.total_cells <= 4000000:
             pygame.init()
             
-            max_screen_width = 1920
-            max_screen_height = 1080
+            display_info = pygame.display.Info()
+            max_screen_width = display_info.current_w - 150
+            max_screen_height = display_info.current_h - 250
             
             scale_w = max_screen_width // self.WIDTH
             scale_h = max_screen_height // self.HEIGHT
-            cell_size = max(1, min(scale_w, scale_h, cell_size))
+            cell_size = min(scale_w, scale_h)
+            
+            # Balance between visibility and fitting on screen
+            if cell_size < 4:
+                cell_size = 4
+                print(f"Note: Large maze - using 4px cells")
+            elif cell_size > 15:
+                cell_size = 15
+                print(f"Note: Using 15px cells for optimal visibility")
             
             screen_width = min(self.WIDTH * cell_size, max_screen_width)
             screen_height = min(self.HEIGHT * cell_size, max_screen_height)
@@ -101,8 +118,10 @@ class LargeMazeGenerator:
                 if screen and step % progress_interval == 0:
                     screen.fill(BLACK)
                     
-                    for sy in range(0, self.HEIGHT, max(1, self.HEIGHT // screen_height)):
-                        for sx in range(0, self.WIDTH, max(1, self.WIDTH // screen_width)):
+                    # Optimize rendering for large mazes - sample pixels
+                    sample_rate = max(1, self.HEIGHT // 800, self.WIDTH // 800)
+                    for sy in range(0, self.HEIGHT, sample_rate):
+                        for sx in range(0, self.WIDTH, sample_rate):
                             if maze[sy, sx] == self.EMPTY:
                                 px = (sx * cell_size) % screen_width
                                 py = (sy * cell_size) % screen_height
@@ -116,8 +135,13 @@ class LargeMazeGenerator:
                     screen.blit(text, (10, screen_height + 10))
                     
                     pygame.display.flip()
+                    pygame.time.wait(10)  # Small delay to prevent CPU overload
                 
-                if step % 10000 == 0:
+                if self.total_cells > 10000000:
+                    if step % 50000 == 0:
+                        progress = (len(visited) / total_passages) * 100
+                        print(f"Progress: {progress:.1f}% - Visited: {len(visited):,}/{total_passages:,}")
+                elif step % 10000 == 0:
                     progress = (len(visited) / total_passages) * 100
                     print(f"Progress: {progress:.1f}% - Visited: {len(visited):,}/{total_passages:,}")
             else:
@@ -190,25 +214,119 @@ class LargeMazeGenerator:
         print(f"   Size: {self.HEIGHT}x{self.WIDTH} = {self.total_cells:,} cells")
         print(f"   Start: (1, 1)")
         print(f"   End: ({self.HEIGHT - 2}, {self.WIDTH - 2})")
+        
+        image_path = self.export_as_image(maze, filepath.replace('.json', '.png'))
+        if image_path:
+            print(f"   Image: {image_path}")
+        
         print(f"{'='*60}\n")
         
         return filepath
     
-    def visualize_maze(self, maze, cell_size=1):
+    def export_as_image(self, maze, filename=None):
+        if filename is None:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"maze_{self.WIDTH}x{self.HEIGHT}_{timestamp}.png"
+        
+        if not filename.startswith('mazes/'):
+            filename = os.path.join('mazes', os.path.basename(filename))
+        
+        print(f"Exporting maze as image for manual solving...")
+        
+        cell_size = 1
+        if self.total_cells > 10000000:
+            print(f"Maze too large to export as single image ({self.total_cells:,} cells)")
+            return None
+        elif self.total_cells > 4000000:
+            cell_size = 5
+            print(f"Creating large image with {cell_size}px per cell (may take time)...")
+        elif self.total_cells > 1000000:
+            cell_size = 8
+        elif self.total_cells > 100000:
+            cell_size = 12
+        else:
+            cell_size = 20
+        
+        img_width = self.WIDTH * cell_size
+        img_height = self.HEIGHT * cell_size + 40
+        
+        if img_width > 32767 or img_height > 32767:
+            print(f"Image dimensions too large ({img_width}x{img_height}), reducing cell size...")
+            cell_size = max(1, min(32767 // self.WIDTH, 32767 // self.HEIGHT))
+            img_width = self.WIDTH * cell_size
+            img_height = self.HEIGHT * cell_size + 40
+        
+        try:
+            pygame.init()
+            surface = pygame.Surface((img_width, img_height))
+            
+            BLACK = (0, 0, 0)
+            WHITE = (255, 255, 255)
+            GREEN = (0, 255, 0)
+            RED = (255, 0, 0)
+            
+            surface.fill(WHITE)
+            
+            for y in range(self.HEIGHT):
+                for x in range(self.WIDTH):
+                    if maze[y, x] == self.WALL:
+                        rect = pygame.Rect(x * cell_size, y * cell_size, cell_size, cell_size)
+                        pygame.draw.rect(surface, BLACK, rect)
+            
+            start_rect = pygame.Rect(1 * cell_size, 1 * cell_size, cell_size, cell_size)
+            pygame.draw.rect(surface, GREEN, start_rect)
+            
+            end_rect = pygame.Rect((self.WIDTH - 2) * cell_size, (self.HEIGHT - 2) * cell_size, cell_size, cell_size)
+            pygame.draw.rect(surface, RED, end_rect)
+            
+            if cell_size >= 8:
+                font = pygame.font.Font(None, min(24, cell_size * 2))
+                start_text = font.render('S', True, BLACK)
+                end_text = font.render('E', True, BLACK)
+                surface.blit(start_text, (1 * cell_size + 2, 1 * cell_size + 2))
+                surface.blit(end_text, ((self.WIDTH - 2) * cell_size + 2, (self.HEIGHT - 2) * cell_size + 2))
+            
+            font = pygame.font.Font(None, 24)
+            info_text = f"Maze: {self.WIDTH}x{self.HEIGHT} | Start (Green) to End (Red)"
+            text_surface = font.render(info_text, True, BLACK)
+            surface.blit(text_surface, (10, self.HEIGHT * cell_size + 10))
+            
+            pygame.image.save(surface, filename)
+            pygame.quit()
+            
+            file_size = os.path.getsize(filename) / (1024 * 1024)
+            print(f"✅ Image exported: {file_size:.2f} MB")
+            
+            return filename
+            
+        except Exception as e:
+            print(f"Error exporting image: {e}")
+            return None
+    
+    def visualize_maze(self, maze, cell_size=None):
         pygame.init()
         
-        max_screen_width = 1920
-        max_screen_height = 1080
+        display_info = pygame.display.Info()
+        max_screen_width = display_info.current_w - 150
+        max_screen_height = display_info.current_h - 250
         
-        scale_w = max_screen_width // self.WIDTH
-        scale_h = max_screen_height // self.HEIGHT
-        cell_size = max(1, min(scale_w, scale_h, cell_size))
+        if cell_size is None:
+            scale_w = max_screen_width // self.WIDTH
+            scale_h = max_screen_height // self.HEIGHT
+            cell_size = min(scale_w, scale_h)
+            
+            # Balance visibility and fitting on screen
+            if cell_size < 4:
+                cell_size = 4
+                print(f"Note: Large maze - using 4px cells")
+            elif cell_size > 15:
+                cell_size = 15
         
         screen_width = min(self.WIDTH * cell_size, max_screen_width)
-        screen_height = min(self.HEIGHT * cell_size, max_screen_height)
+        screen_height = min(self.HEIGHT * cell_size, max_screen_height) + 50
         
-        screen = pygame.display.set_mode((screen_width, screen_height + 50))
-        pygame.display.set_caption(f"Maze: {self.WIDTH}x{self.HEIGHT} ({self.total_cells:,} cells)")
+        screen = pygame.display.set_mode((screen_width, screen_height))
+        pygame.display.set_caption(f"Maze: {self.WIDTH}x{self.HEIGHT} ({self.total_cells:,} cells) | {cell_size}px cells")
         
         BLACK = (0, 0, 0)
         WHITE = (255, 255, 255)
@@ -256,15 +374,16 @@ def main():
     print("="*60)
     print("LARGE MAZE GENERATOR")
     print("="*60)
-    print("\nThis generator can create mazes with 30+ million cells")
-    print("and visualize them in real-time using pygame.\n")
+    print("\nOptimized for Mac M1 Air 8GB - Max 50M cells")
+    print("Large mazes (>10M cells) disable visualization to prevent lag\n")
     
     presets = {
-        '1': (5001, 5001, "Small (~25M cells)"),
-        '2': (7001, 7001, "Medium (~49M cells)"),
-        '3': (10001, 10001, "Large (~100M cells)"),
-        '4': (6001, 9001, "Wide (~54M cells)"),
-        '5': (9001, 6001, "Tall (~54M cells)"),
+        '1': (201, 201, "Small (40K cells) - Very visible"),
+        '2': (501, 501, "Medium (251K cells) - Recommended"),
+        '3': (1001, 1001, "Large (1M cells) - Good balance"),
+        '4': (2001, 2001, "Extra Large (4M cells) - Advanced"),
+        '5': (5001, 5001, "Huge (25M cells) - Expert only"),
+        '6': (7001, 7001, "Maximum (49M cells) - Visualization disabled"),
     }
     
     print("Preset sizes:")
@@ -272,6 +391,7 @@ def main():
         print(f"  {key}. {desc}: {w}x{h} = {w*h:,} cells")
     
     print("  c. Custom size")
+    print("\nRecommended for 8GB RAM: Options 1-3")
     
     choice = input("\nSelect preset (1-5) or 'c' for custom: ").strip().lower()
     
@@ -284,7 +404,14 @@ def main():
         print("Invalid choice. Using default: 5001x5001")
         width, height = 5001, 5001
     
-    visualize = input("\nVisualize during generation? (y/n, default=y): ").strip().lower() != 'n'
+    # Auto-disable visualization for very large mazes to prevent lag
+    if width * height > 10000000:
+        print(f"\n⚠️  Warning: Maze is very large ({width * height:,} cells)")
+        print("Visualization automatically disabled to prevent lag.")
+        print("Generation will take several minutes. Please be patient...")
+        visualize = False
+    else:
+        visualize = input("\nVisualize during generation? (y/n, default=y): ").strip().lower() != 'n'
     
     generator = LargeMazeGenerator(width, height)
     

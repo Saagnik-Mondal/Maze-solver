@@ -3,6 +3,12 @@ import numpy as np
 import json
 import os
 from datetime import datetime
+try:
+    import pygame
+    PYGAME_AVAILABLE = True
+except ImportError:
+    PYGAME_AVAILABLE = False
+    print("Note: pygame not available, maze image export disabled")
 
 WIDTH = 39
 HEIGHT = 19
@@ -110,11 +116,64 @@ data = {
 with open(filepath, 'w') as f:
     json.dump(data, f, indent=2)
 
+image_path = None
+if PYGAME_AVAILABLE:
+    try:
+        image_path = filepath.replace('.json', '.png')
+        cell_size = max(10, min(30, 1200 // max(WIDTH, HEIGHT)))
+        
+        img_width = WIDTH * cell_size
+        img_height = HEIGHT * cell_size + 40
+        
+        pygame.init()
+        surface = pygame.Surface((img_width, img_height))
+        
+        BLACK = (0, 0, 0)
+        WHITE = (255, 255, 255)
+        GREEN = (0, 255, 0)
+        RED = (255, 0, 0)
+        
+        surface.fill(WHITE)
+        
+        for y in range(HEIGHT):
+            for x in range(WIDTH):
+                if maze_array[y, x] == 1:
+                    rect = pygame.Rect(x * cell_size, y * cell_size, cell_size, cell_size)
+                    pygame.draw.rect(surface, BLACK, rect)
+        
+        start_rect = pygame.Rect(1 * cell_size, 1 * cell_size, cell_size, cell_size)
+        pygame.draw.rect(surface, GREEN, start_rect)
+        
+        end_rect = pygame.Rect((WIDTH - 2) * cell_size, (HEIGHT - 2) * cell_size, cell_size, cell_size)
+        pygame.draw.rect(surface, RED, end_rect)
+        
+        if cell_size >= 8:
+            font = pygame.font.Font(None, min(24, cell_size * 2))
+            start_text = font.render('S', True, BLACK)
+            end_text = font.render('E', True, BLACK)
+            surface.blit(start_text, (1 * cell_size + 2, 1 * cell_size + 2))
+            surface.blit(end_text, ((WIDTH - 2) * cell_size + 2, (HEIGHT - 2) * cell_size + 2))
+        
+        font = pygame.font.Font(None, 24)
+        info_text = f"Maze: {WIDTH}x{HEIGHT} | Start (Green) to End (Red)"
+        text_surface = font.render(info_text, True, BLACK)
+        surface.blit(text_surface, (10, HEIGHT * cell_size + 10))
+        
+        pygame.image.save(surface, image_path)
+        pygame.quit()
+    except Exception as e:
+        print(f"Could not export image: {e}")
+        image_path = None
+
 print(f"\n{'='*50}")
-print(f"✅ Maze saved to: {filepath}")
+print(f"Maze saved to: {filepath}")
+if image_path:
+    print(f"Image saved to: {image_path}")
 print(f"   Size: {HEIGHT}x{WIDTH}")
 print(f"   Start: (1, 1)")
 print(f"   End: ({HEIGHT - 2}, {WIDTH - 2})")
-print(f"\n🎯 Maze ready to be solved!")
+print(f"\nMaze ready to be solved!")
 print(f"Run: python recursive_backtracking.py")
+if image_path:
+    print(f"Or open {os.path.basename(image_path)} to solve by hand")
 print(f"{'='*50}\n")
