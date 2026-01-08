@@ -131,6 +131,28 @@ def solve_maze_dead_end_filling(maze, start, end, visualize=True):
         text_surface = font.render(info_text, True, BLACK)
         screen.blit(text_surface, (10, screen_height - 50))
         
+        # Draw color legend
+        legend_x = 10
+        legend_y = 10
+        legend_size = 15
+        legend_spacing = 20
+        
+        if cell_size >= 4:
+            legend_items = [
+                (GREEN, "Start"),
+                (RED, "End"),
+                (BLACK, "Wall"),
+                (GRAY, "Dead End"),
+                (WHITE, "Path")
+            ]
+            
+            for i, (color, label) in enumerate(legend_items):
+                y_pos = legend_y + i * legend_spacing
+                pygame.draw.rect(screen, color, (legend_x, y_pos, legend_size, legend_size))
+                pygame.draw.rect(screen, BLACK, (legend_x, y_pos, legend_size, legend_size), 1)
+                label_surface = font.render(label, True, BLACK)
+                screen.blit(label_surface, (legend_x + legend_size + 5, y_pos))
+        
         pygame.display.flip()
         
         if total_cells > 1000000:
@@ -231,6 +253,26 @@ def solve_maze_dead_end_filling(maze, start, end, visualize=True):
         final_text = f"SOLVED! Time: {solve_time:.2f}s | Path: {np.sum(solution)} cells"
         text_surface = font.render(final_text, True, (0, 128, 0))
         screen.blit(text_surface, (10, screen_height - 50))
+        
+        # Draw final color legend
+        legend_x = 10
+        legend_y = 10
+        legend_size = 15
+        legend_spacing = 20
+        
+        legend_items = [
+            (GREEN, "Start"),
+            (RED, "End"),
+            (BLACK, "Wall"),
+            (BLUE, "Solution Path")
+        ]
+        
+        for i, (color, label) in enumerate(legend_items):
+            y_pos = legend_y + i * legend_spacing
+            pygame.draw.rect(screen, color, (legend_x, y_pos, legend_size, legend_size))
+            pygame.draw.rect(screen, BLACK, (legend_x, y_pos, legend_size, legend_size), 1)
+            label_surface = font.render(label, True, BLACK)
+            screen.blit(label_surface, (legend_x + legend_size + 5, y_pos))
         
         pygame.display.flip()
         
