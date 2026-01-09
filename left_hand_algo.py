@@ -7,6 +7,16 @@ import sys
 from datetime import datetime
 
 
+# Color constants for visualization
+COLOR_WHITE = (255, 255, 255)
+COLOR_BLACK = (0, 0, 0)
+COLOR_GREEN = (0, 200, 0)
+COLOR_RED = (200, 0, 0)
+COLOR_BLUE = (80, 120, 255)
+COLOR_YELLOW = (255, 255, 0)
+COLOR_GRAY = (128, 128, 128)
+
+
 def load_maze(filename, directory="mazes"):
     filepath = os.path.join(directory, filename)
     
