@@ -31,7 +31,7 @@ def load_maze(filename, directory="mazes"):
 
 
 def left_hand_algo(maze, start, end, visualize = True, max_steps = 10000000):
-    if maze is None or len(maze.shape) != 2:
+   if maze is None or len(maze.shape) != 2:
         raise ValueError("Invalid maze: must be a 2D numpy array")
     
     if not (0 <= start[0] < maze.shape[0] and 0 <= start[1] < maze.shape[1]):
