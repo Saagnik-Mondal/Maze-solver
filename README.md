@@ -1,19 +1,37 @@
-# Maze Solver
+# Maze Generator & Solver (Python, Pygame, NumPy)
 
-Generate and solve mazes with Python. Watch them get built and solved in real-time.
+A Python-based project to generate, visualize, and solve mazes in real time using multiple algorithms. Built to experiment with maze logic, performance optimization, and algorithmic problem-solving — scalable from small grids to tens of millions of cells.
 
-## What's This?
+## Features
+Real-time maze generation and solving visualization using Pygame
+Supports very large mazes (tested up to 50 million cells)
+Multiple maze-solving algorithms implemented and compared
+Automatic performance optimizations for large-scale mazes
+Export mazes as PNG images for offline or manual solving
+Automatic saving and loading of generated mazes
 
-I built this to play around with maze algorithms. You can generate mazes (including ridiculously large ones with 50 million cells if you're feeling adventurous) and solve them using different methods. Everything runs with Pygame for visualization.
+## Maze Generation
+Uses recursive backtracking (depth-first search) to carve paths
+Starts from a random cell and explores neighbors
+Backtracks when no unvisited paths remain
+Guarantees a fully connected maze with a single solution
 
-## What Can It Do?
+## Maze Solving Algorithms
+Recursive Backtracking
+Explores all possible paths until the exit is found
+Dead-End Filling
+Iteratively removes dead ends until only the correct path remains
+Left-Hand Rule
+Wall-following approach that simulates real-world maze navigation
 
-- Generate mazes using recursive backtracking
-- Make huge mazes - tested up to 50M cells on my M1 Air
-- Watch mazes being created and solved in real-time
-- Three different solving methods (recursive backtracking, dead end filling, left-hand rule)
-- Export mazes as PNG if you want to solve them on paper
-- Saves everything automatically so you can come back to it later
+## Technical Details
+Mazes stored as NumPy arrays (1 = wall, 0 = path)
+Start position: (1, 1)
+Exit position: (height-2, width-2)
+Large mazes saved as .npy files to reduce memory usage
+Visualization automatically disables for extremely large mazes
+Cell sizes adjust dynamically based on maze dimensions
+All outputs saved with timestamps in the mazes/ directory
 
 ## The Files
 
@@ -81,8 +99,5 @@ Starts at a random spot and carves paths by visiting neighbors. When it hits a w
 
 I optimized this for my M1 Air with 8GB RAM. It handles up to 50M cells pretty well. For really huge mazes, the visualization auto-disables to prevent lag. Cell sizes adjust automatically so you don't need to zoom in.
 
----
-
-Made by Saagnik Mondal
-
-Feel free to use this for whatever you want.
+## Author
+## Saagnik Mondal
