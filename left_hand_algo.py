@@ -1,10 +1,11 @@
-import numpy as np 
 import json
-import os 
-import time 
-import pygame 
-import sys 
+import os
+import sys
+import time
 from datetime import datetime
+
+import numpy as np
+import pygame
 
 
 # Color constants for visualization
