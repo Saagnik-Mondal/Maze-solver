@@ -18,6 +18,16 @@ COLOR_GRAY = (128, 128, 128)
 
 
 def load_maze(filename, directory="mazes"):
+    """
+    Load a maze from a JSON file.
+    
+    Args:
+        filename: Name of the maze file
+        directory: Directory containing the maze files
+        
+    Returns:
+        Tuple of (maze_array, start_position, end_position, metadata)
+    """
     filepath = os.path.join(directory, filename)
     
     if not os.path.exists(filepath):
