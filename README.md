@@ -1,120 +1,88 @@
-Maze Solver
+# Maze Solver
 
-A Python-based maze generation and solving system with real-time visualization using Pygame.
+Generate and solve mazes with Python. Watch them get built and solved in real-time.
 
-Overview
+## What's This?
 
-This project implements multiple algorithms for both generating and solving mazes. It includes support for creating extremely large mazes with up to 50 million cells and provides interactive visualization during generation and solving.
+I built this to play around with maze algorithms. You can generate mazes (including ridiculously large ones with 50 million cells if you're feeling adventurous) and solve them using different methods. Everything runs with Pygame for visualization.
 
-Features
+## What Can It Do?
 
-Maze Generation: Creates perfect mazes using recursive backtracking algorithm
-Large Maze Support: Can generate mazes with up to 50 million cells
-Real-time Visualization: Watch mazes being generated and solved in real-time
-Multiple Solving Algorithms: Recursive backtracking and dead end filling methods
-Multiple Size Presets: Choose from small, medium, large, or custom maze sizes
-Efficient Storage: Automatically saves mazes in JSON format with numpy array support for large mazes
-Interactive Solving: Visual maze solving with step counting and time tracking
-Image Export: Export mazes as PNG images for manual solving
-Optimized Performance: Designed for Mac M1 Air 8GB with lag prevention
+- Generate mazes using recursive backtracking
+- Make huge mazes - tested up to 50M cells on my M1 Air
+- Watch mazes being created and solved in real-time
+- Three different solving methods (recursive backtracking, dead end filling, left-hand rule)
+- Export mazes as PNG if you want to solve them on paper
+- Saves everything automatically so you can come back to it later
 
-Files
+## The Files
 
-maze.py: Basic maze generator for small to medium sized mazes
-large_maze_generator.py: Advanced generator for creating massive mazes (up to 50M cells)
-recursive_backtracking.py: Maze solver using recursive backtracking with visualization
-dead_end_solver.py: Maze solver using dead end filling algorithm with visualization
-export_maze_image.py: Utility to export existing mazes as PNG images for manual solving
+- `maze.py` - basic maze generator, good for quick testing
+- `large_maze_generator.py` - for when you want to go crazy with size
+- `recursive_backtracking.py` - classic depth-first maze solver
+- `dead_end_solver.py` - fills in dead ends until only the solution remains
+- `left_hand_algo.py` - wall-following solver (like you'd do with your hand on the wall)
+- `export_maze_image.py` - converts mazes to PNG images
 
-Requirements
+## Getting Started
 
-Python 3.x
-NumPy
-Pygame
+You'll need Python 3 and a couple packages:
 
-Installation
-
-Install the required dependencies:
-
+```bash
 pip install numpy pygame
+```
 
-Usage
+## How to Use
 
-Generating a Standard Maze
-
+**Make a basic maze:**
+```bash
 python maze.py
+```
 
-This will create a maze and save it to the mazes directory.
-
-Generating a Large Maze
-
+**Make a big maze:**
+```bash
 python large_maze_generator.py
+```
+Just follow the prompts to pick the size.
 
-Follow the interactive prompts to select maze size and visualization options.
-
-Solving a Maze
-
-Option 1: Recursive Backtracking
-
+**Solve a maze:**
+```bash
 python recursive_backtracking.py
-
-This will automatically load and solve the most recently generated maze using recursive backtracking.
-
-Option 2: Dead End Filling
-
+# or
 python dead_end_solver.py
+# or
+python left_hand_algo.py
+```
 
-This will solve the maze by iteratively filling in all dead ends until only the solution path remains.
-
-Exporting Maze as Image
-
+**Export as image:**
+```bash
 python export_maze_image.py
+```
 
-This will convert any maze to a PNG image that you can print and solve by hand.
+## How It Actually Works
 
-How It Works
+### Generation
+Starts at a random spot and carves paths by visiting neighbors. When it hits a wall, it backtracks and tries a different route. Keeps going until the whole maze is carved out.
 
-Maze Generation
+### Solving
+- **Recursive backtracking** - tries every possible path until it finds the exit
+- **Dead end filling** - keeps filling in dead ends until only the solution path is left
+- **Left-hand rule** - follows the left wall until you reach the exit (like you'd do in a real maze)
 
-The generator uses recursive backtracking to carve passages through a grid of walls. Starting from a random cell, it randomly chooses unvisited neighboring cells and creates paths between them. When it reaches a dead end, it backtracks to find unexplored paths.
+## Some Details
 
-Maze Solving Algorithms
+- Mazes are stored as numpy arrays (1 = wall, 0 = path)
+- Start is always top-left corner at (1, 1)
+- Exit is always bottom-right at (height-2, width-2)
+- Big mazes get saved as .npy files to save space
+- Everything gets saved in the `mazes/` folder with timestamps
 
-Recursive Backtracking
+## Performance Notes
 
-The solver explores all possible paths from the start position. It marks cells as visited and backtracks when it hits a dead end. This continues until the end position is found. The algorithm guarantees finding a solution if one exists.
+I optimized this for my M1 Air with 8GB RAM. It handles up to 50M cells pretty well. For really huge mazes, the visualization auto-disables to prevent lag. Cell sizes adjust automatically so you don't need to zoom in.
 
-Dead End Filling
+---
 
-This algorithm identifies and fills in all dead ends (passages with only one open neighbor) iteratively. It continues filling dead ends until no more exist. What remains is the solution path from start to end. This method is often faster for complex mazes and provides a clear visualization of the solution process.
+Made by Saagnik Mondal
 
-Technical Details
-
-Mazes are stored as numpy arrays where 1 represents walls and 0 represents passages
-Start position is always at (1, 1)
-End position is always at (height-2, width-2)
-All maze dimensions are odd numbers to ensure proper wall and passage structure
-Large mazes are saved as separate .npy files for efficient storage and loading
-
-Performance
-
-Optimized for Mac M1 Air 8GB with lag prevention
-Can handle mazes up to 50 million cells
-Adaptive visualization updates based on maze size
-Automatic visualization disabling for very large mazes to prevent lag
-Cell sizes automatically adjusted for clear visibility without zooming
-Progress tracking provides feedback during long generation times
-
-Output
-
-Generated mazes are saved in the mazes/ directory with timestamps
-Each maze file includes metadata such as dimensions, start/end positions, and generation timestamp
-Solved mazes are updated with solution paths, step counts, and solve times
-
-Author
-
-Created by Saagnik Mondal
-
-License
-
-This project is open source and available for educational and personal use.
+Feel free to use this for whatever you want.
